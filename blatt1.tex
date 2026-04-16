@@ -66,7 +66,7 @@
 \renewcommand{\labelenumi}{\text{\theenumi}}
 \renewcommand{\labelenumii}{(\roman{enumii})} 
 
-\ohead{Marvin\\
+\ohead{Marvin Simon (3883376)\\
        Jan Theil (3794698)}
 
 \ihead{System and Web Security}
@@ -273,4 +273,15 @@ Interpretation of $s = 10011000_2$ as a signed (8-bit) number:
     \item $01101000_2 = 104 \implies s = -104$
 \end{itemize} 
 
+\exercise{Buffer Overflow}
+The output of the code is: \texttt{undvier}.
+
+When we try to \verb|strcpy foo| into \verb|buffer3| we get an overflow, because the \verb|string| in \verb|foo| is \verb|"zweiundvier\0zig"|.
+\verb|foo| gets cut at the null-termination so what we actually try to copy into \verb|buffer3| is "zweiundvier".
+When we look at \verb|buffer3[4]| we can see that it can take 4 bytes of the \verb|string|. 
+So [0] = z, [1] = w, [2] = e, [3] = i.
+Now the overflow happens and writes the rest of the string into the memory of \verb|buffer2[3]| and \verb|buffer1[8]|.
+If we would also print \verb|buffer1| we only get the output \texttt{vier}.
+
+\exercise{Stack Frames}
 \end{document}
