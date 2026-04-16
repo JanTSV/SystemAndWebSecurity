@@ -1,0 +1,276 @@
+\documentclass[12pt]{scrartcl}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[ngerman]{babel}
+\usepackage{lmodern}
+\usepackage{graphicx}
+\usepackage[pdftex,hyperref,dvipsnames]{xcolor}
+\usepackage{listings}
+\usepackage[a4paper,lmargin={2cm},rmargin={2cm},tmargin={3.5cm},bmargin = {2.5cm},headheight = {4cm}]{geometry}
+\usepackage{amsmath,amssymb,amstext,amsthm}
+% \usepackage[lined,algonl,boxed]{algorithm2e} 
+\usepackage{algpseudocode}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\usepackage{hyperref}
+\usepackage{url}
+\usepackage{tcolorbox}
+\usepackage[inline]{enumitem}
+\usepackage[headsepline]{scrlayer-scrpage} 
+
+\usepackage[scale=0.55, lineVdist=1em]{secstack}
+\pagestyle{scrheadings} 
+\usetikzlibrary{automata,positioning}
+
+\usepgfplotslibrary{external}
+%\tikzexternalize
+\pgfplotsset{width=10cm,compat=1.9}
+\pgfplotsset{every axis/.style={
+    axis line style = thick,
+    grid = both,
+    tick pos = left,
+    tick align = outside,
+    tick style = {thick,black},
+    fill = blue,
+	line width = 2pt,
+}}
+
+\lstset{
+  basicstyle=\ttfamily\small,
+  numbers=left,
+  numberstyle=\tiny,
+  stepnumber=1,
+  numbersep=8pt,
+  frame=single,
+  breaklines=true,
+  columns=fullflexible
+}
+
+\lstset{
+  language=C,
+  basicstyle=\ttfamily\small,
+  keywordstyle=\color{blue},
+  commentstyle=\color{gray},
+  stringstyle=\color{green!60!black},
+  numbers=left,
+  numberstyle=\tiny,
+  stepnumber=1,
+  numbersep=8pt,
+  frame=single,
+  breaklines=true,
+  columns=fullflexible
+}
+
+\renewcommand{\theenumi}{(\alph{enumi})}
+\renewcommand{\labelenumi}{\text{\theenumi}}
+\renewcommand{\labelenumii}{(\roman{enumii})} 
+
+\ohead{Marvin\\
+       Jan Theil (3794698)}
+
+\ihead{System and Web Security}
+
+\newcounter{exnum}
+\newcommand{\exercise}[1]{\section*{Problem \theexnum\stepcounter{exnum}: #1}}
+
+\begin{document}
+
+\setcounter{exnum}{1}
+
+\exercise{Disassembling with gdb}
+
+The first letters of each team member's given name are $M$ and $J$.
+This results in the following code:
+
+\begin{lstlisting}
+int main() {
+  int a;
+  int b;
+  int c;
+  a = 'M' + 'J';
+  b = 3;
+  c = a+b;
+  return 0;
+}
+\end{lstlisting}
+
+\texttt{gdb command disassemble main} outputs:
+\begin{lstlisting}[language={}]
+Dump of assembler code for function main:
+0x08048344 <main+0>:	lea    0x4(%esp),%ecx
+0x08048348 <main+4>:	and    $0xfffffff0,%esp
+0x0804834b <main+7>:	pushl  -0x4(%ecx)
+0x0804834e <main+10>:	push   %ebp
+0x0804834f <main+11>:	mov    %esp,%ebp
+0x08048351 <main+13>:	push   %ecx
+0x08048352 <main+14>:	sub    $0x10,%esp
+0x08048355 <main+17>:	movl   $0x97,-0x10(%ebp)
+0x0804835c <main+24>:	movl   $0x3,-0xc(%ebp)
+0x08048363 <main+31>:	mov    -0xc(%ebp),%eax
+0x08048366 <main+34>:	add    -0x10(%ebp),%eax
+0x08048369 <main+37>:	mov    %eax,-0x8(%ebp)
+0x0804836c <main+40>:	mov    $0x0,%eax
+0x08048371 <main+45>:	add    $0x10,%esp
+0x08048374 <main+48>:	pop    %ecx
+0x08048375 <main+49>:	pop    %ebp
+0x08048376 <main+50>:	lea    -0x4(%ecx),%esp
+0x08048379 <main+53>:	ret    
+End of assembler dump.
+\end{lstlisting}
+
+\begin{itemize}
+    \item Line 5 (\texttt{a = 'M' + 'J'}) corresponds to \texttt{0x08048355, line 9}:\\
+          \texttt{'M' + 'J' = 0x4D + 0x4A = 0x97} and in this line \texttt{0x97} is written to 
+          \texttt{ebp - 0x10} which seems to be the location of local variable \texttt{a}.
+    \item Line 6 (\texttt{b = 3}) corresponds to \texttt{0x0804835c, line 10}:\\
+          Same reasoning as above. \texttt{3 = 0x3} is written to \texttt{ebp - 0xC}
+          which seems to be the location of local variable \texttt{b}.
+    \item Line 7 (\texttt{c = a+b}) corresponds to \texttt{0x08048363 - 0x08048369, line 11 - 13}:\\
+          First the value of \texttt{ebp - 0xC = variable b} is written to register \texttt{eax}. Then
+          the value of \texttt{ebp - 0x10 = variable a} is added to \texttt{eax} resulting in \texttt{eax = a + b}.
+          Finally, the result of the addition is written to texttt{ebp - 0x8} which seems to be the location of local variable \texttt{c}.
+\end{itemize}
+
+
+\exercise{x86 Assembly Code (I)}
+
+% #include <stdio.h>
+
+% void myfunction(int a) {
+%         long some_long;
+%         char * some_strings[2];
+%         some_long = 42;
+%         some_strings[0] = "foo";
+%         some_strings[1] = "bar";
+%         some_long -= 19;
+%         printf("%ld\n%d\n%s\n", some_long, a, some_strings[0]);
+% }
+% int main () {
+%         int x = 0;
+%         myfunction(x);
+% }
+
+
+\begin{lstlisting}[language={}, caption=Assembler code for main]
+Dump of assembler code for function main:
+0x080483b6 <main+0>:	lea    0x4(%esp),%ecx  # copy address ESP - 0x4 to ECX
+0x080483ba <main+4>:	and    $0xfffffff0,%esp  # alignment
+0x080483bd <main+7>:	pushl  -0x4(%ecx)  # push ECX - 0x4 to the stack
+0x080483c0 <main+10>:	push   %ebp  # push EBP to the stack
+0x080483c1 <main+11>:	mov    %esp,%ebp  # EBP = ESP
+0x080483c3 <main+13>:	push   %ecx  # push ECX to the stack
+0x080483c4 <main+14>:	sub    $0x14,%esp  # subtract 0x14 from ESP
+0x080483c7 <main+17>:	movl   $0x0,-0x8(%ebp)  # write 0x0 to EBP - 0x8
+0x080483ce <main+24>:	mov    -0x8(%ebp),%eax  # write EBP - 0x8 to EAX 
+0x080483d1 <main+27>:	mov    %eax,(%esp)  # write EAX to ESP
+0x080483d4 <main+30>:	call   0x8048374 <myfunction>  # call myfunction: push 0x8048374 to stack and jump
+0x080483d9 <main+35>:	add    $0x14,%esp  # add 0x14 to ESP
+0x080483dc <main+38>:	pop    %ecx  # pop ECX from stack
+0x080483dd <main+39>:	pop    %ebp  # pop abp from stack
+0x080483de <main+40>:	lea    -0x4(%ecx),%esp  # copy address ECX - 0x4 to ESP
+0x080483e1 <main+43>:	ret  # return: pop instruction pointer from stack
+End of assembler dump.
+\end{lstlisting}
+
+\begin{lstlisting}[language={}, caption=Assembler code for myfunction]
+Dump of assembler code for function myfunction:
+0x08048374 <myfunction+0>:	push   %ebp  # Push EBP to stack
+0x08048375 <myfunction+1>:	mov    %esp,%ebp  # ESP = EBP: stack pointer is new fram pointer
+0x08048377 <myfunction+3>:	sub    $0x28,%esp  # ESP = ESP - 0x28 
+0x0804837a <myfunction+6>:	movl   $0x2a,-0x4(%ebp)  # EBP - 0x4 = 0x2a: Init some_long with 42
+0x08048381 <myfunction+13>:	movl   $0x80484b0,-0xc(%ebp)  # EBP - 0xC = 0x80484b0: some_strings[...] = "..."
+0x08048388 <myfunction+20>:	movl   $0x80484b4,-0x8(%ebp)  # EBP - 0x8 = 0x80484b4: some_strings[...] = "..."
+0x0804838f <myfunction+27>:	subl   $0x13,-0x4(%ebp)  # EBP - 0x4 = (EBP - 0x4) - 0x13: some_long -= 19
+0x08048393 <myfunction+31>:	mov    -0xc(%ebp),%eax  # EAX = EBP - 0xC: Save some_string[...] to EAX
+0x08048396 <myfunction+34>:	mov    %eax,0xc(%esp)  # ESP + 0xC = EAX: Write EAX (=some_string[...]) to the stack
+0x0804839a <myfunction+38>:	mov    0x8(%ebp),%eax  # EAX = EBP + 0x8: Save some_string[...] to EAX
+0x0804839d <myfunction+41>:	mov    %eax,0x8(%esp)  # ESP + 0x8 = EAX: Write EAX (=some_string[...]) to the stack
+0x080483a1 <myfunction+45>:	mov    -0x4(%ebp),%eax  # EBP - 0x4 = EAX: Save some_long to EAX
+0x080483a4 <myfunction+48>:	mov    %eax,0x4(%esp)  # ESP + 0x4 = EAX: Write EAX (=some_long) to the stack
+0x080483a8 <myfunction+52>:	movl   $0x80484b8,(%esp)  # ESP = 0x80484b8: printf string pointer
+0x080483af <myfunction+59>:	call   0x80482d8 <printf@plt>  # print call
+0x080483b4 <myfunction+64>:	leave  # restore frame: ESP = EBP, pop EBP
+0x080483b5 <myfunction+65>:	ret  # retrun
+End of assembler dump.
+\end{lstlisting}
+
+\exercise{x86 Assembly Code (II)}
+
+\begin{lstlisting}[language={}]
+Dump of assembler code for function blub:
+# Frame pointer setup
+0x080483c4 <blub+0>: push %ebp
+0x080483c5 <blub+1>: mov %esp,%ebp
+0x080483c7 <blub+3>: sub $0x18,%esp  # Allocates 0x18 bytes on the stack
+
+# Actual function
+0x080483ca <blub+6>: movl $0x17,-0x4(%ebp)  # Init EBP - 0x4 (some local variable, let's say "a") with 0x17
+0x080483d1 <blub+13>: mov -0x4(%ebp),%eax  # EAX = EBP - 0x4 = a
+0x080483d4 <blub+16>: sub $0xf,%eax  # EAX = EAX - 0x: a - 0xf
+0x080483d7 <blub+19>: mov %eax,-0x8(%ebp)  # EBP - 0x8 = EAX: save EAX to some other local variable ("b")
+0x080483da <blub+22>: mov -0x8(%ebp),%eax  # EAX = EBP - 0x8 = b
+0x080483dd <blub+25>: mov %eax,0x4(%esp)  # ESP - 0x4 = EAX: Write value of EAX = b to stack
+0x080483e1 <blub+29>: movl $0x80484d0,(%esp)  # Write some printf string to stack
+0x080483e8 <blub+36>: call 0x80482f8 <printf@plt>  # call printf
+
+# Return
+0x080483ed <blub+41>: leave
+0x080483ee <blub+42>: ret
+End of assembler dump.
+\end{lstlisting}
+
+The following c function is functionally equivalent (+ added main()):
+\begin{lstlisting}[language={C}]
+#include <stdio.h>
+
+void blob() {
+    int a;
+    int b;
+    a = 0x17;
+    b = a - 0xf;
+    printf("b = %x", b);
+}
+
+int main() {
+    blob();
+    return 0;
+}
+\end{lstlisting}
+
+% Dump of assembler code for function blob:
+% 0x08048374 <blob+0>:	push   %ebp
+% 0x08048375 <blob+1>:	mov    %esp,%ebp
+% 0x08048377 <blob+3>:	sub    $0x18,%esp
+% 0x0804837a <blob+6>:	movl   $0x17,-0x8(%ebp)
+% 0x08048381 <blob+13>:	mov    -0x8(%ebp),%eax
+% 0x08048384 <blob+16>:	sub    $0xf,%eax
+% 0x08048387 <blob+19>:	mov    %eax,-0x4(%ebp)
+% 0x0804838a <blob+22>:	mov    -0x4(%ebp),%eax
+% 0x0804838d <blob+25>:	mov    %eax,0x4(%esp)
+% 0x08048391 <blob+29>:	movl   $0x8048490,(%esp)
+% 0x08048398 <blob+36>:	call   0x80482d8 <printf@plt>
+% 0x0804839d <blob+41>:	leave  
+% 0x0804839e <blob+42>:	ret    
+% End of assembler dump.
+
+
+\exercise{Two’s Complement}
+\begin{align*}
+x &= 'M' + 'J' = 0x4D + 0x4A = \\
+  &= 0x97 = 151\\
+\implies s &= (x \bmod 127) + 128 \\
+           &= (151 \bmod 127) + 128 \\
+           &= (24) + 128 = 152
+\end{align*}
+
+Binary representation of $s$ as an unsigned (8-bit) number: $s = 152 = 10011000_2$
+
+Interpretation of $s = 10011000_2$ as a signed (8-bit) number:
+\begin{itemize}
+    \item MSB $\mathbf{1}0011000_2$ is $1$ which inidcates a negative value
+    \item Calculate 2's complement: $10011000_2 \overset{\text{invert}}{\to} 01100111_2 \overset{+1}{\to} 01101000_2$
+    \item $01101000_2 = 104 \implies s = -104$
+\end{itemize} 
+
+\end{document}
