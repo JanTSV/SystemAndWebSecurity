@@ -285,7 +285,27 @@ Now the overflow happens and writes the rest of the string into the memory of \v
 If we would also print \verb|buffer1| we only get the output \texttt{vier}.
 
 \exercise{Stack Frames}
-\stackLine[16]{C50}
 
+\verb|do_something(...)|
+
+\stackLine[24]{C1C}
+\stackVariable{C1C}{c}
+\stackVariable{C20}{d}
+\stackVariable{C24}{oldFrameP}
+\stackVariable{C28}{RetAddr}
+\stackPointerToAddr{C24}{ebp}
+\stackPointerToAddr{C1C}{esp}
+\stackVariable{C2C}{a}
+\stackVariable{C30}{b}
+
+\verb|main()|
+
+\stackLine[24]{C34}
+\stackVariable{C34}{globOfftable}
+\stackVariable{C38}{e}
+\stackVariable{C3C}{f}
+\stackVariable{C40}{g}
+\stackVariable{C44}{oldFrameP}
+\stackVariable{C48}{RetAddr}
 
 \end{document}
