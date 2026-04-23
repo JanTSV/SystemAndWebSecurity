@@ -2,7 +2,6 @@
 
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
-\usepackage[ngerman]{babel}
 \usepackage{lmodern}
 \usepackage{graphicx}
 %\usepackage[pdftex,hyperref,dvipsnames]{xcolor}
@@ -17,6 +16,7 @@
 \usepackage{tcolorbox}
 \usepackage[inline]{enumitem}
 \usepackage[headsepline]{scrlayer-scrpage} 
+\usepackage{float}
 
 \usepackage[scale=0.55, lineVdist=1em]{secstack}
 \pagestyle{scrheadings} 
@@ -82,9 +82,22 @@ We are calling the program \textit{sof-exploit-10.c} with our exploit program an
 
 We then set the return address to some address in our local \verb|b|. We filled the variable \verb|b| with nops and the shellcode execution. So now we only need to hit one of the NOPS and it executes the injected shellcode.
 
-\includegraphics[width = 19em]{Attack_Screenshot_1}
-\includegraphics[width = 19em]{Attack_Screenshot_2}
 
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{Attack_Screenshot_1.png}
+    \caption{Finding out the return address within \texttt{b}}
+    \label{fig:Attack_Screenshot_1}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{Attack_Screenshot_2.png}
+    \caption{Running the attack}
+    \label{fig:Attack_Screenshot_2}
+\end{figure}
+
+\exercise{Stack-based Overflow}
 \exercise{Stack-based Overflow}
 \exercise{Stack-based Overflow}
 \exercise{Stack-based Overflow}
