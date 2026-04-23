@@ -5,7 +5,7 @@
 \usepackage[ngerman]{babel}
 \usepackage{lmodern}
 \usepackage{graphicx}
-\usepackage[pdftex,hyperref,dvipsnames]{xcolor}
+%\usepackage[pdftex,hyperref,dvipsnames]{xcolor}
 \usepackage{listings}
 \usepackage[a4paper,lmargin={2cm},rmargin={2cm},tmargin={3.5cm},bmargin = {2.5cm},headheight = {4cm}]{geometry}
 \usepackage{amsmath,amssymb,amstext,amsthm}
@@ -13,7 +13,6 @@
 %\usepackage{algpseudocode}
 \usepackage{tikz}
 \usepackage{pgfplots}
-\usepackage{hyperref}
 \usepackage{url}
 \usepackage{tcolorbox}
 \usepackage[inline]{enumitem}
@@ -22,6 +21,7 @@
 \usepackage[scale=0.55, lineVdist=1em]{secstack}
 \pagestyle{scrheadings} 
 \usetikzlibrary{automata,positioning}
+\graphicspath{ {./images/} }
 
 \usepgfplotslibrary{external}
 %\tikzexternalize
@@ -79,7 +79,14 @@
 \setcounter{exnum}{1}
 \exercise{Stack-based Overflow}
 We are calling the program \textit{sof-exploit-10.c} with our exploit program and feeding it argument parameters which are overwriting the buffer of the local variable \verb|b|.
+
 We then set the return address to some address in our local \verb|b|. We filled the variable \verb|b| with nops and the shellcode execution. So now we only need to hit one of the NOPS and it executes the injected shellcode.
 
+\includegraphics[width = 19em]{Attack_Screenshot_1}
+\includegraphics[width = 19em]{Attack_Screenshot_2}
 
+\exercise{Stack-based Overflow}
+\exercise{Stack-based Overflow}
+\exercise{Stack-based Overflow}
+\exercise{Memory Alignment}
 \end{document}
