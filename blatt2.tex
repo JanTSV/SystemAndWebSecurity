@@ -98,7 +98,36 @@ We then set the return address to some address in our local \verb|b|. We filled 
 \end{figure}
 
 \exercise{Stack-based Overflow}
+
 \exercise{Stack-based Overflow}
+
+For the source code see \textit{attack3.c}.
+
+The attack uses \texttt{strcpy(str2, str)} of the function \texttt{foo()} to overwrite the function
+frame such that the return address of \texttt{foo()} points to code that eventually runs the shellcode.
+
+\textit{attack3.c} does the following:
+\begin{itemize}
+  \item Write \texttt{login=} to the buffer to pass the check of \texttt{test()}
+  \item Write \texttt{ff} to the buffer in the size of the local variables of \texttt{foo()}
+  \item Overwrite the frame pointer
+  \item Change the return address to \texttt{0xbffff430}. This address is calculated by inspecting the frame with \texttt{gdb}. It points behind the function frame (rest of the attack buffer).
+  \item Fill the rest of the buffer with NOPs and put the shell code at the end.
+\end{itemize}
+
+By inspecting the memory around \texttt{\%ebp} it can be seen that the value
+of the return address was actually overwritten by the overflowing buffer to the address
+defined in \textit{attack3.c}.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{Problem3_Attack.png}
+    \caption{Running the attack}
+    \label{fig:Problem3_Attack}
+\end{figure}
+
+
 \exercise{Stack-based Overflow}
+
 \exercise{Memory Alignment}
 \end{document}
