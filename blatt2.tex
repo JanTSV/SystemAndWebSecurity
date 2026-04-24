@@ -100,5 +100,15 @@ We then set the return address to some address in our local \verb|b|. We filled 
 \exercise{Stack-based Overflow}
 \exercise{Stack-based Overflow}
 \exercise{Stack-based Overflow}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{Attack_Screenshot_Exploit_4.png}
+    \caption{Running the attack}
+    \label{fig:Attack_Screenshot_Exploit_4}
+\end{figure}
+In this attack, we switched the malicious code to the back and load some address that is higher in the stack.
+This shows, that it doesn't matter how big the buffer is, we can always inject malicious code as long as a Buffer Overflow ist possible.
+
+
 \exercise{Memory Alignment}
 \end{document}
