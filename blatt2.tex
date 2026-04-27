@@ -78,7 +78,7 @@
 
 \setcounter{exnum}{1}
 \exercise{Stack-based Overflow}
-We are calling the program \textit{sof-exploit-10.c} with our exploit program and feeding it argument parameters which are overwriting the buffer of the local variable \verb|b|.
+We are calling the program \textit{attack1.c} with our exploit program and feeding it argument parameters which are overwriting the buffer of the local variable \verb|b|.
 
 We then set the return address to some address in our local \verb|b|. We filled the variable \verb|b| with nops and the shellcode execution. So now we only need to hit one of the NOPS and it executes the injected shellcode.
 
@@ -134,8 +134,10 @@ defined in \textit{attack3.c}.
     \caption{Running the attack}
     \label{fig:Attack_Screenshot_Exploit_4}
 \end{figure}
-In this attack, we switched the malicious code to the back and load some address that is higher in the stack.
-This shows, that it doesn't matter how big the buffer is, we can always inject malicious code as long as a Buffer Overflow ist possible.
+For the source code see \textit{attack4.c}.
 
-\exercise{Memory Alignment}
+Similar to Problem 4 a buffer overflow (here with \texttt{b}) is used to overwrite the local variables and frame management memory.
+Again, the return pointer of the function is overwritten and set to the memory of the attack buffer. A NOP sled is used to guide the PC
+to the shellcode.
+
 \end{document}
