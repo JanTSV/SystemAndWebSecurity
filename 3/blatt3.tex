@@ -93,6 +93,9 @@ with this string opens a shell.
     \item Write the address to \texttt{system} in little endian format to the last 4 bytes of the buffer. This will be the new \texttt{error\_handler} pointer. 
 \end{itemize}
 
+The challenge of this exercise was to find a string that does not start with \texttt{'/'} but opens a shell. It should also not contain any \texttt{'\textbackslash 0'}s because that would
+not overflow \texttt{buf}, since \texttt{strcpy} would not copy the whole string then. Hence, we are using \texttt{"sh;"} with filled up \texttt{"A"}s.
+
 Running \texttt{./bss-exploit-2-target \$(echo -e '<attack4.txt>')} (see screenshot below or \textit{attack4.txt} for actual string) 
 results in the shell being opened:
 
