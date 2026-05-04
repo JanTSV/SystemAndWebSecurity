@@ -76,6 +76,37 @@
 
 \begin{document}
 
+\setcounter{exnum}{2}
+\exercise{Off-by-One Exploit}
+
+For the attack string please see \textit{string1.c}.
+
+This attack leverages the modification of the EBP. Like we can see in the attack screenshot, we are overwriting the Framepointer.
+
+When the frame gets terminated with \texttt{leave} and \texttt{ret}, the processor is doing 3 things.
+\begin{verbatim}
+mov esp, ebp
+\end{verbatim}
+So the \textit{esp} now points to the address of the corrupted \textit{ebp} -> our buffer.
+\begin{verbatim}
+pop ebp
+\end{verbatim}
+Put the previous (or in our case mock) FramePointer into \textit{ebp} (e.g. AAAA).
+
+And lastly...
+\begin{verbatim}
+pop eip
+\end{verbatim}
+Here our new return address which is saved in the buffer is loaded into the \textit{eip} and loads our shellcode.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{attack_2.png}
+    \label{fig:attack2}
+\end{figure}
+
+The challenge of this exercise was to find the correct layout of the address and the understanding of how we can inject the return address into the construct.
+
+
 \setcounter{exnum}{4}
 \exercise{BSS-segment-based Overflow with Function Pointer}
 
