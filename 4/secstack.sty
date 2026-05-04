@@ -1,0 +1,127 @@
+\NeedsTeXFormat{LaTeX2e}[1994/06/01]
+\ProvidesPackage{secstack}[2019/04/26 A package to draw stack layouts]
+
+\RequirePackage{xkeyval}
+\newcommand{\secstack@scale}{}
+\newcommand{\secstack@lineVdist}{}
+\DeclareOptionX{scale}{\renewcommand{\secstack@scale}{#1}}
+\DeclareOptionX{lineVdist}{\renewcommand{\secstack@lineVdist}{#1}}
+\DeclareOptionX*{\PackageWarning{secstack}{`\CurrentOption' is ignored}}
+\ExecuteOptionsX{scale=1}
+\ExecuteOptionsX{lineVdist=4em}
+\ProcessOptionsX\relax
+
+\RequirePackage{tikz}
+\usetikzlibrary{calc}
+\RequirePackage{pgf}
+\RequirePackage{fmtcount}
+\RequirePackage{expl3}
+\RequirePackage{calc}
+\RequirePackage{xspace}
+\ExplSyntaxOn
+\cs_set_eq:NN \intfromhex \int_from_hex:n
+\ExplSyntaxOff
+
+\newcounter{secstackfirstAddress}
+\newcounter{secstacklastAddress}
+\newcounter{secstacktmp}
+\newcounter{secstackcenteringHelper}
+
+% Draw an emtpy stack layout
+% \stackLine[<number of bytes in line>]{<first address in line>}
+% The number of bytes defaults to 24
+% The first address in line must be <= FFF (due to TeX limitiations), the intention
+% is to only give the last three hexadecimal digits of each address.
+\newcommand{\stackLine}[2][24]{%
+    \setcounter{secstackfirstAddress}{\intfromhex{#2}}%
+    \setcounter{secstacklastAddress}{\thesecstackfirstAddress + #1 - 1}%
+    \begin{tikzpicture}[remember picture, scale=\secstack@scale]%
+        \foreach \addr [count=\cnt] in {\thesecstackfirstAddress, ..., \thesecstacklastAddress} {
+            \setcounter{secstacktmp}{\addr}
+            % Draw line on top and label it with address
+            \draw (\cnt,0) -- ($(\cnt,0)+(1,0)$) node[midway, above, anchor=west, rotate=90] {\texttt{0x\hexadecimal{secstacktmp}}};
+            % Byte separators on top
+            \draw (\cnt,0) -- ($(\cnt,0)-(0,0.1)$);
+            % Line on bottom
+            \draw (\cnt,-1) -- ($(\cnt,0)+(1,-1)$);
+            % Byte separators on the bottom
+            \draw (\cnt,-1) -- ($(\cnt,0)-(0,0.9)$);
+            % Create an invisible node to refer to this memomy cell later
+            \node (\addr) at (\cnt,-0.5) {};
+        }
+        % Byte separators on the last byte in the line
+        \draw ($(#1,0)+(1,0)$) -- ($(#1,0)+(1,-0.1)$);
+        \draw ($(#1,-1)+(1,0)$) -- ($(#1,-1)+(1,+0.1)$);
+    \end{tikzpicture}%
+    \par\vspace*{\secstack@lineVdist} % Leave space for pointers
+}
+
+% Print a variable of size <number of bytes> bytes in a previously drawn stack line
+% Note that all those bytes MUST be in the same stack line!
+% The default number of bytes is 4.
+% \stackVariable[<number of bytes>]{<startingAddress>}{<description text>}
+% Starting address MUST be given in hexadecimal notation
+\newcommand{\stackVariable}[3][4]{%
+    \setcounter{secstackfirstAddress}{\intfromhex{#2}}
+    % Subtract 1 to be able to handle line breaks (i.e., stack line ends with
+    % the last byte of the current stack variable). We later draw the dotted lines
+    % at this address plus one unit in x direction.
+    \setcounter{secstacklastAddress}{\thesecstackfirstAddress + #1 - 1}
+    % We want to center the caption in the middle of the occupied bytes.
+    % For even numbers of occupied bytes, this isn't a problem: We just divide
+    % the number of bytes by two and that's the offset that we need to move from
+    % the starting address to the center.
+    % For odd numbers of bytes however, we need a different approach (as we can only
+    % refer to "full" addresses and not "half addresses"):
+    % 1) Divide by two and round towards zero
+    % 2) Calculate the address directly below the real center (the real center is at a
+    %    half-address, but we need to refer to full addresses)
+    % 3) Double the value from step 1)
+    % 4) Compare the number of occupied bytes with the number from step 3). If they're
+    %    equal, we already have the correct center (from step 2)). If they are not equal,
+    %    we have an odd number of occupied bytes and need to add 0.5 units in x direction
+    %    to the position calculated in step 2) to get to the center.
+    \setcounter{secstackcenteringHelper}{#1/2}
+    \setcounter{secstacktmp}{\thesecstackfirstAddress + \thesecstackcenteringHelper}
+    \setcounter{secstackcenteringHelper}{\thesecstackcenteringHelper * 2}
+    \begin{tikzpicture}[remember picture,overlay, scale=\secstack@scale]
+        \draw[dotted] ($(\thesecstackfirstAddress)+(0,0.5)$) -- ($(\thesecstackfirstAddress)-(0,0.5)$);
+        \draw[dotted] ($(\thesecstacklastAddress)+(1,0.5)$) -- ($(\thesecstacklastAddress)-(-1,0.5)$);
+        \ifnum\thesecstackcenteringHelper=#1
+            % We had an even number of occupied bytes
+            \node[align=center] at (\thesecstacktmp) {#3};
+        \else
+            % Odd number of occupied bytes
+            \node[align=center] at ($(\thesecstacktmp)+(0.5,0)$) {#3};
+        \fi
+    \end{tikzpicture}%
+}
+
+% Can be used to draw annotated pointers to stack addresses
+% \stackPointerToAddr{<address>}{<caption>}
+\newcommand{\stackPointerToAddr}[2]{%
+    \setcounter{secstacktmp}{\intfromhex{#1}}
+    \begin{tikzpicture}[remember picture,overlay, scale=\secstack@scale]
+        \draw[latex-] ($(\thesecstacktmp)-(0,0.5)$) -- ($(\thesecstacktmp)-(0,1)$) node[below, align=center] {#2};
+    \end{tikzpicture}%
+}
+
+% Can be used to mark some parts of the stack in a color (or some other tikz drawing style), default is "green"
+% \stackHighlight[<tikz fill style>]{<from address>}{<to address>}
+\newcommand{\stackHighlight}[3][green]{%
+    \setcounter{secstackfirstAddress}{\intfromhex{#2}}
+    \setcounter{secstacklastAddress}{\intfromhex{#3}}
+    \begin{tikzpicture}[remember picture,overlay, scale=\secstack@scale]
+        \fill[opacity=0.2, #1] ($(\thesecstackfirstAddress)-(0,0.5)$) rectangle ($(\thesecstacklastAddress)+(1,0.5)$);
+    \end{tikzpicture}%
+}
+
+
+% Can be used to generate legend entries to explain the highlightings done with \stackHighlight
+% \stackHighlightLegend[<tikz fill style, default is "green">]
+\newcommand{\stackHighlightLegend}[1][green]{%
+    \begin{tikzpicture}[baseline]
+        \fill[opacity=0.2, #1] (0,-0.2em) rectangle (1em,0.8em);
+    \end{tikzpicture}\xspace%
+}
+\endinput
