@@ -77,7 +77,66 @@
 \begin{document}
 
 \setcounter{exnum}{2}
-\exercise{Static Code Analysis}
+\exercise{Static Code Analysis a)}
+
+\begin{lstlisting}
+main(int argc, char *argv[]) {
+  char *in;
+  if (argc < 2) {
+    printf("At least one argument required!\n");
+    return -1;
+  }
+  if (atoi(argv[1]) == 1) {
+    in = malloc(64);
+    printf("Enter argument: ");
+    fgets(in,64,stdin);
+  }
+  else {
+    in = malloc(32);
+    printf("Enter argument: ");
+    fgets(in,32,stdin);
+  }
+  /* Do something with in */
+  printf("in=%s\n",in);
+}
+\end{lstlisting}
+
+Lets analyze the important parts of the program with the constraint system defined by Wagner et al.
+
+For the constraint system we can ignore line 1 (main) and 3-6 as this doesn't have any constraints.
+
+Lets consider the first constraint branch in line seven. When we have a argument input value of 1, we are in the constraint branch of line seven. Here we allocate 64 bytes to the variable \texttt{in} so we define in our constraint system.\[ 64 \subseteq alloc(in) \]
+In line 10 we are using the \texttt{fgets(in, 64, stdin)} function.
+\[ 
+  [1, 64] \subseteq \text{len}(in)
+\]
+
+
+The second constraint branch is called when we have no arguments.
+Here 32 bytes are allocated. So again we define in the constraint system.\[ 32 \subseteq alloc(in) \]
+
+In line 15 we set \texttt{in} variable via \texttt{fgets} with user-input.
+\[ 
+  [1, 32] \subseteq \text{len}(in)
+\]
+
+So in summary my length of \texttt{in} is:
+\[
+  \begin{aligned}
+    \relax[1,64] \subseteq  \text{len}(in1) \\
+    [1,32] \subseteq  \text{len}(inElse) 
+  \end{aligned}
+\]
+
+So our safety property is verified.
+
+\setcounter{exnum}{2}
+\exercise{Static Code Analysis b)}
+When I analyze the programm manually, I can see that all my bounds are in order.
+Both branches won't and can't be overflown because \texttt{fgets} copies 63 + termination byte into the \texttt{in} variable in branch one. In the second branch, is copies 31 + termination byte into the \texttt{in} variable.
+
+I don't come to a different conclusion, but I guess I should come.
+My guess would be, because the Static Analyzation is flow-insnsitive, it thinks that the variable \texttt{in} was allocated once with 32 and 64 bytes and because of that the \texttt{fgets} function will mess something up.
 
 \setcounter{exnum}{3}
 \exercise{Return-to-libc}
