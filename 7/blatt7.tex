@@ -64,6 +64,17 @@
 }
 
 \lstset{
+  literate=
+    {ä}{{\"a}}1
+    {ö}{{\"o}}1
+    {ü}{{\"u}}1
+    {Ä}{{\"A}}1
+    {Ö}{{\"O}}1
+    {Ü}{{\"U}}1
+    {ß}{{\ss}}1
+}
+
+\lstset{
     escapeinside={(*@}{@*)}
 }
 
@@ -80,6 +91,33 @@
 \newcommand{\exercise}[1]{\section*{Problem \theexnum\stepcounter{exnum}: #1}}
 
 \begin{document}
+
+\setcounter{exnum}{1}
+\exercise{HTTP Transmission and XSS}
+\begin{enumerate}[label=\arabic*]
+  \item
+    The encoding of the urls is a mix of UTF-8 and percentage encoded text.
+    The idea behind this is probably, so every input can be parsed without risiking a wrong ASCII representation. This ensures that unsafe ASCII Characters can be interpreted and read by servers and humans
+    alike.
+
+  \item
+    This will print a new Header into Website A and only output given string in Website B.
+      \begin{lstlisting}
+        Aß Bü C+ <h1> Hello </h1>
+      \end{lstlisting}
+
+  \item
+    Script B is using the escape method to parse the input and to escpae the special characters:
+      \begin{lstlisting}
+        result = f'<h3>Search Results for {escape(lookup)}</h3>'
+      \end{lstlisting}
+    While Script A is formatting it without any checks.
+      \begin{lstlisting}
+        result = f'<h3>Search Results for {lookup}</h3>'
+      \end{lstlisting}
+    The esape is there so no special characters get interpreted as valid HTML code, as shown in this example.
+
+\end{enumerate}
 
 \setcounter{exnum}{2}
 \exercise{Stealing Form Data With XSS}
